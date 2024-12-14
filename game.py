@@ -9,7 +9,7 @@ screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Cabin")
 
 # Load the background image
-background_image = pygame.image.load("Untitled_Artwork.png")
+background_image = pygame.image.load("cabintestdrawing1.png")
 
 # Main game loop
 running = True
