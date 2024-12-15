@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+
 # Initialize Pygame
 pygame.init()
 
@@ -9,17 +10,17 @@ screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Cabin")
 screen_width, screen_height = 800, 600
 # Load the background image
-background_image = pygame.image.load("cabin.png")
+background_image = pygame.image.load("assets/cabin.png")
 background_image = pygame.transform.scale(background_image, (screen_width, screen_height))
 # Define the character's properties
 character_images = {
-    "up": pygame.image.load("NcharU.png"),
-    "down": pygame.image.load("NcharD.png"),
-    "left": pygame.image.load("NcharL.png"),
-    "right": pygame.image.load("NcharR.png"),
+    "up": pygame.image.load("assets/NcharU.png"),
+    "down": pygame.image.load("assets/NcharD.png"),
+    "left": pygame.image.load("assets/NcharL.png"),
+    "right": pygame.image.load("assets/NcharR.png"),
 }
 
-character_image = pygame.image.load("NcharD.png")
+character_image = pygame.image.load("assets/NcharD.png")
 character_width, character_height = 150, 150  # Adjust to fit your character size
 for direction in character_images:
     character_images[direction] = pygame.transform.scale(
@@ -31,6 +32,9 @@ character_x = screen_width // 2  # Start at the center of the screen
 character_y = screen_height // 2
 character_speed = .35  # Movement speed
 current_direction = "down"
+
+fire_x, fire_y, fire_width, fire_height = 303, 0, 220,150
+fire = pygame.Rect(fire_x, fire_y, fire_width, fire_height)
 
 bed_x, bed_y, bed_width, bed_height = 100, 360, 300, 100  #BED LOCATION
 bed_rect = pygame.Rect(bed_x, bed_y, bed_width, bed_height) #BED RECT
@@ -85,13 +89,18 @@ while running:
 
     # Check for interaction with the bed
     if character_rect.colliderect(bed_rect):
+
         character_x = original_x
         character_y = original_y
-        if keys[pygame.K_e]:  # Press 'E' to interact
+        
+        if keys[pygame.K_y]:  # Press 'y' to interact
             print("Interacting with the bed!")
             # Add the fade-to-black or text display function here
     # Check for interaction with walls
     if character_rect.colliderect(left_wall) or character_rect.colliderect(right_wall) or character_rect.colliderect(bot_wall) or character_rect.colliderect(top_wall):
+        character_x = original_x
+        character_y = original_y
+    if character_rect.colliderect(fire):
         character_x = original_x
         character_y = original_y
 
@@ -105,6 +114,7 @@ while running:
     pygame.draw.rect(screen, (255, 255, 255), (top_wall_x, top_wall_y, top_width, top_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (right_wall_x, right_wall_y, rwall_width, rwall_height), 2)
     pygame.draw.rect(screen, (255, 255, 255),(bot_wall_x, bot_wall_y,bwall_width, bwall_height) , 2)
+    pygame.draw.rect(screen, (255,255,255), (fire_x, fire_y, fire_width, fire_height),2)
     # Update the display
     pygame.display.flip()
 
