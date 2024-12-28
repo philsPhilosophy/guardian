@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 # Initialize Pygame
 pygame.init()
@@ -99,11 +100,11 @@ def cabin():
         character_y = original_y
         show_text = True
     if show_text:
-        text_box_rect = pygame.Rect(200, 150, 400, 100)
+        text_box_rect = pygame.Rect(character_x+58, character_y-22, 250, 20)
         pygame.draw.rect(screen, (0, 0, 0), text_box_rect)
         pygame.draw.rect(screen, (255, 255, 255), text_box_rect, 2)
         question_text = font.render("Would you like to sleep? (Y/N)", True, (255, 255, 255))
-        screen.blit(question_text, (220, 180))
+        screen.blit(question_text, (character_x+60, character_y-20))
         if keys[pygame.K_y]:
             fade_surface = pygame.Surface((screen_width, screen_height))  # Create a black surface
             fade_surface.fill(BLACK)  # Fill it with black
@@ -141,8 +142,47 @@ def cabin():
 
 def dreams():
     """Dream Screen"""
+
+    global current_screen, trans, k, font
+    font = pygame.font.Font(None, 34)
+    fontd =pygame.font.Font(None, 48)
+    dreamO= ['Dreaming...']
+    dream = [['','I dream that I am a dream character inside the mind of a god.','The god dreams my exsistence and life.','That way the god can simulate the questions it wonders.'],
+             [ '', 'I dream that I am Zhuang Zhou dreaming that he is a butterfly.', 'When he awakes he is unsure of whether he is Zhuang Zhou or',' the butterfly dreaming he is Zhuang Zhou.','I awake not knowing if I am a butterfly, Zhuang Zhou, or myself.']]
+    running = True
+    i = 0
     screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 24)
+    randomdream = random.choice(dream)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:  # Check for a key press event
+                if event.key == pygame.K_SPACE:  # If spacebar is pressed
+                    print('space pressed', i)
+                    i += 1
+
+        # Render text and update the screen
+
+        if i < len(randomdream):  # Only render if within bounds
+
+            screen.fill((0, 0, 0))  # Clear the screen
+            dreamopening = fontd.render(dreamO[0], True, (255, 255, 255))
+            screen.blit(dreamopening, (0,0))
+            pygame.time.delay(30)
+            for j in range(min(i, len(randomdream))+1):
+                dream_text = font.render(randomdream[j], True, (255, 255, 255))
+                screen.blit(dream_text, (50,  (100+j * 50)))
+
+            pygame.display.flip()  # Update display
+        else:
+            print('end dream loop')
+            trans = False
+            current_screen = CABIN
+            break
+
+        pygame.display.flip()  # Update display
 
 
 
@@ -162,8 +202,9 @@ def game_over():
 
 clock = pygame.time.Clock()
 running = True
-
+k = 0
 while running:
+    print("MAIN GAME LOOP")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -171,7 +212,6 @@ while running:
 
             # Event Handling for Screen Transitions
         if current_screen == CABIN:
-
             if trans:
                 current_screen = DREAMS
         elif current_screen == GAME_SCREEN:
@@ -181,11 +221,19 @@ while running:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 current_screen = CABIN
 
-        # Rendering Screens
+       # Rendering Screens
     if current_screen == CABIN:
+        print("CABIN")
         cabin()
+
     elif current_screen == DREAMS:
+        print("DREAM RUNS")
+
         dreams()
+
+
+
+
     elif current_screen == GAME_OVER:
         game_over()
 
