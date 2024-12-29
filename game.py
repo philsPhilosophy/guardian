@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-
+import os
 # Initialize Pygame
 pygame.init()
 
@@ -53,11 +53,14 @@ right_wall = pygame.Rect(right_wall_x, right_wall_y, rwall_width, rwall_height) 
 bot_wall_x, bot_wall_y,bwall_width, bwall_height = 0,540, 800, 80 #Bottom wall location & dim.
 bot_wall = pygame.Rect(bot_wall_x, bot_wall_y,bwall_width, bwall_height)
 
+door_x, door_y, door_w, door_h = 570, 60, 90, 40
+door = pygame.Rect(door_x,door_y,door_w, door_h)
+
 # Define screens as constants
 CABIN = "cabin"
 DREAMS = "dreams"
 GAME_SCREEN = "game_screen"
-GAME_OVER = "game_over"
+OUTSIDE = "outside"
 
 # Global State: Current screen
 current_screen = CABIN
@@ -67,11 +70,12 @@ current_direction = "down"
 character_speed = .35  # Movement speed
 
 trans = False
+outsidetrans = False
 
 # --------------------- Screen Functions ---------------------
 
 def cabin():
-    global character_x, character_y, current_direction, character_speed, original_y, original_x, GAME_SCREEN, GAME_OVER, trans
+    global character_x, character_y, current_direction, character_speed, original_y, original_x, GAME_SCREEN, GAME_OVER, trans, outsidetrans
     screen.blit(background_image, (0, 0))
     show_text=False
     font = pygame.font.Font(None, 24)
@@ -92,6 +96,8 @@ def cabin():
     if keys[pygame.K_RIGHT]:
         character_x += character_speed
         current_direction = "right"
+    if keys[pygame.K_w]:
+        menu()
 
     character_rect = pygame.Rect(character_x, character_y, character_width, character_height)
         # Check for interaction with the bed
@@ -114,6 +120,8 @@ def cabin():
                 pygame.display.flip()  # Update display
                 pygame.time.delay(30)  # Delay for smooth transition
             trans = True
+    if character_rect.colliderect(door):
+        outsidetrans = True
 
 
     if character_rect.colliderect(left_wall) or character_rect.colliderect(right_wall) or character_rect.colliderect(
@@ -135,6 +143,7 @@ def cabin():
     pygame.draw.rect(screen, (255, 255, 255), (right_wall_x, right_wall_y, rwall_width, rwall_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (bot_wall_x, bot_wall_y, bwall_width, bwall_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (fire_x, fire_y, fire_width, fire_height), 2)
+    pygame.draw.rect(screen, (255,255,255), (door_x, door_y, door_w, door_h),2 )
 
 
 
@@ -148,7 +157,8 @@ def dreams():
     fontd =pygame.font.Font(None, 48)
     dreamO= ['Dreaming...']
     dream = [['','I dream that I am a dream character inside the mind of a god.','The god dreams my exsistence and life.','That way the god can simulate the questions it wonders.'],
-             [ '', 'I dream that I am Zhuang Zhou dreaming that he is a butterfly.', 'When he awakes he is unsure of whether he is Zhuang Zhou or',' the butterfly dreaming he is Zhuang Zhou.','I awake not knowing if I am a butterfly, Zhuang Zhou, or myself.']]
+             [ '', 'I dream that I am Zhuang Zhou dreaming that he is a butterfly.', 'When he awakes he is unsure of whether he is Zhuang Zhou or',' the butterfly dreaming he is Zhuang Zhou.','I awake not knowing if I am a butterfly, Zhuang Zhou, or myself.'],
+             ['', 'I dream that a voice states:','All Your Fears are Illusory.']]
     running = True
     i = 0
     screen.fill((0, 0, 0))
@@ -187,12 +197,113 @@ def dreams():
 
 
 
-def game_over():
+def outside():
     """Game Over Screen"""
-    screen.fill((255, 0, 0))
+    global outsidetrans, CABIN, current_screen, trans, character_y
+    screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 36)
-    text = font.render("Game Over: Press R to Restart", True, BLACK)
-    screen.blit(text, (200, 300))
+    y=0
+    text_l = [
+        "We are on our way to the outward regions,",
+        "to Mars and other places.",
+        "But here is a journey inward.",
+        "A Journey In Mind"
+    ]
+
+
+    # Define initial vertical position
+
+    i = 0
+    # Render and display each line
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:  # Check for a key press event
+                if event.key == pygame.K_SPACE:  # If spacebar is pressed
+                    print('space pressed', i)
+                    i += 1
+
+        # Render text and update the screen
+
+        if i < len(text_l):  # Only render if within bounds
+
+            screen.fill((0, 0, 0))  # Clear the screen
+            pygame.time.delay(30)
+            for j in range(min(i, len(text_l)) + 1):
+                dream_text = font.render(text_l[j], True, (255, 255, 255))
+                screen.blit(dream_text, (50, (100 + j * 50)))
+
+            pygame.display.flip()  # Update display
+        else:
+
+            outsidetrans = False
+            character_y += 40
+
+            current_screen = CABIN
+            break
+
+        pygame.display.flip()  # Update display
+
+
+fontM = pygame.font.Font(None, 40)
+bg_color = (30, 30, 30)
+text_color = (200, 200, 200)
+highlight_color = (100, 100, 250)
+
+topics = {
+    "Science": [("Physics Basics", "physics_basics.pdf"),
+                ("Biology Insights", "biology_insights.pdf")],
+    "History": [("Ancient Civilizations", "ancient_civ.pdf"),
+                ("Modern History", "modern_history.pdf")],
+}
+
+menu_state = "topics"  # Can be "topics" or "texts"
+selected_topic = None
+selected_index = 0
+
+def draw_menu(options, selected_index):
+    screen.fill(bg_color)
+    for i, option in enumerate(options):
+        color = highlight_color if i == selected_index else text_color
+        text = fontM.render(option, True, color)
+        screen.blit(text, (50, 100 + i * 50))
+    pygame.display.flip()
+
+def open_pdf(pdf_path):
+    try:
+        os.startfile(pdf_path)  # For Windows
+    except AttributeError:
+        os.system(f"open {pdf_path}")  # For macOS/Linux
+
+def menu():
+    global menu_state, selected_index, selected_topic
+    running = True
+    while running:
+        options = list(topics.keys()) if menu_state == "topics" else [text[0] for text in topics[selected_topic]]
+        draw_menu(options, selected_index)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_index = max(0, selected_index - 1)
+                elif event.key == pygame.K_DOWN:
+                    selected_index = min(len(options) - 1, selected_index + 1)
+                elif event.key == pygame.K_RETURN:
+                    if menu_state == "topics":
+                        selected_topic = options[selected_index]
+                        menu_state = "texts"
+                        selected_index = 0
+                    elif menu_state == "texts":
+                        pdf_path = topics[selected_topic][selected_index][1]
+                        open_pdf(pdf_path)
+                elif event.key == pygame.K_BACKSPACE:
+                    if menu_state == "texts":
+                        menu_state = "topics"
+                        selected_index = 0
 
 
 # --------------------- Main Game Loop ---------------------
@@ -204,7 +315,7 @@ clock = pygame.time.Clock()
 running = True
 k = 0
 while running:
-    print("MAIN GAME LOOP")
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -214,28 +325,18 @@ while running:
         if current_screen == CABIN:
             if trans:
                 current_screen = DREAMS
-        elif current_screen == GAME_SCREEN:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                current_screen = GAME_OVER
-        elif current_screen == GAME_OVER:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                current_screen = CABIN
+            if outsidetrans:
+                current_screen = OUTSIDE
 
        # Rendering Screens
     if current_screen == CABIN:
-        print("CABIN")
         cabin()
 
     elif current_screen == DREAMS:
-        print("DREAM RUNS")
-
         dreams()
 
-
-
-
-    elif current_screen == GAME_OVER:
-        game_over()
+    elif current_screen == OUTSIDE:
+        outside()
 
     pygame.display.flip()  # Update display
 
