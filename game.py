@@ -56,6 +56,9 @@ bot_wall = pygame.Rect(bot_wall_x, bot_wall_y,bwall_width, bwall_height)
 door_x, door_y, door_w, door_h = 570, 60, 90, 40
 door = pygame.Rect(door_x,door_y,door_w, door_h)
 
+books_x, books_y, books_width, books_height = 700, 175, 80, 350
+books = pygame.Rect(books_x, books_y, books_width, books_height)
+
 # Define screens as constants
 CABIN = "cabin"
 DREAMS = "dreams"
@@ -122,7 +125,14 @@ def cabin():
             trans = True
     if character_rect.colliderect(door):
         outsidetrans = True
-
+    if character_rect.colliderect(books):
+        text_box_rect = pygame.Rect(character_x - 58, character_y - 22, 250, 20)
+        pygame.draw.rect(screen, (0, 0, 0), text_box_rect)
+        pygame.draw.rect(screen, (255, 255, 255), text_box_rect, 2)
+        question_text = font.render("   Would you like to read? (Y/N)", True, (255, 255, 255))
+        screen.blit(question_text, (character_x - 60, character_y - 20))
+        if keys[pygame.K_y]:
+            menu()
 
     if character_rect.colliderect(left_wall) or character_rect.colliderect(right_wall) or character_rect.colliderect(
             bot_wall) or character_rect.colliderect(top_wall):
@@ -137,6 +147,7 @@ def cabin():
 
     # Draw the character image based on the current direction
     screen.blit(character_images[current_direction], (character_x, character_y))
+'''
     pygame.draw.rect(screen, (255, 255, 255), (bed_x, bed_y, bed_width, bed_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (left_wall_x, left_wall_y, wall_width, wall_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (top_wall_x, top_wall_y, top_width, top_height), 2)
@@ -144,8 +155,9 @@ def cabin():
     pygame.draw.rect(screen, (255, 255, 255), (bot_wall_x, bot_wall_y, bwall_width, bwall_height), 2)
     pygame.draw.rect(screen, (255, 255, 255), (fire_x, fire_y, fire_width, fire_height), 2)
     pygame.draw.rect(screen, (255,255,255), (door_x, door_y, door_w, door_h),2 )
+    pygame.draw.rect(screen, (255,255,255), (books_x, books_y, books_width, books_height), 2)
 
-
+'''
 
 
 
@@ -169,7 +181,7 @@ def dreams():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:  # Check for a key press event
-                if event.key == pygame.K_SPACE:  # If spacebar is pressed
+                if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # If spacebar is pressed
                     print('space pressed', i)
                     i += 1
 
@@ -221,7 +233,7 @@ def outside():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:  # Check for a key press event
-                if event.key == pygame.K_SPACE:  # If spacebar is pressed
+                if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # If spacebar is pressed
                     print('space pressed', i)
                     i += 1
 
@@ -248,15 +260,42 @@ def outside():
 
 
 fontM = pygame.font.Font(None, 40)
-bg_color = (30, 30, 30)
-text_color = (200, 200, 200)
-highlight_color = (100, 100, 250)
+
+bg_color = (255, 105, 220)
+text_color = (0, 0, 0)
+highlight_color = (255, 255, 255)
 
 topics = {
-    "Science": [("Physics Basics", "physics_basics.pdf"),
-                ("Biology Insights", "biology_insights.pdf")],
-    "History": [("Ancient Civilizations", "ancient_civ.pdf"),
-                ("Modern History", "modern_history.pdf")],
+    "Mathematics": [
+                ("Foundations of Geometry, Hilbert", "assets/Books/Hilbert.pdf"),
+                ("Elements, Euclid","assets/Books/Elements.pdf"),
+                ("On Formally Undecidable Propositions, Godel", "assets/Books/Godel.pdf"),
+                ("Calculus, Early Transcendentals, Stewart","assets/Books/calculus.pdf"),
+                ("On Computable Numbers, Turing", "assets/Books/Computable.pdf"),
+                ("A New Kind of Science, Wolfram", "assets/Books/ANewKindofScience.pdf")
+    ],
+
+    "History": [
+                ("Sapiens, A Brief History of Humankind, Harari", "assets/Books/Harari.pdf"),
+                ("The Black Death, A Personal History, Hatcher", "assets/Books/Hatcher.pdf")
+    ],
+
+    "Philosophy":[
+                ("Thus Spoke Zarathustra, Nietzsche","assets/Books/Zarathustra.pdf")
+    ],
+    "Fiction":[
+                ("All The Pretty Horses, McCarthy", "assets/Books/AllThePrettyHorses.pdf")
+    ],
+    "Computer Science":[
+                ("Introduction to Algorithms, CLRS", "assets/Books/IntroAlgo.pdf"),
+                ("Advances in Financial Machine Learning, Lopez de Prado","assets/Books/FML.pdf"),
+                ("On Computable Numbers, Turing", "assets/Books/Computable.pdf"),
+                ("A New Kind of Science, Wolfram", "assets/Books/ANewKindofScience.pdf")
+    ],
+    "Psychology":[
+                ("The Interpretation of Dreams, Freud", "assets/Books/Freud.pdf"),
+                ("Stories of Love, Vikings to Tinder, Larsen","assets/Books/StoriesofLovefromVikingstoTinder.pdf")
+    ]
 }
 
 menu_state = "topics"  # Can be "topics" or "texts"
@@ -281,7 +320,12 @@ def menu():
     global menu_state, selected_index, selected_topic
     running = True
     while running:
-        options = list(topics.keys()) if menu_state == "topics" else [text[0] for text in topics[selected_topic]]
+        # Determine menu options based on the current state
+        if menu_state == "topics":
+            options = list(topics.keys())
+        else:  # menu_state == "texts"
+            options = [text[0] for text in topics[selected_topic]] + ["Back"]
+
         draw_menu(options, selected_index)
 
         for event in pygame.event.get():
@@ -294,17 +338,19 @@ def menu():
                     selected_index = min(len(options) - 1, selected_index + 1)
                 elif event.key == pygame.K_RETURN:
                     if menu_state == "topics":
+                        # Transition to the texts menu
                         selected_topic = options[selected_index]
                         menu_state = "texts"
                         selected_index = 0
                     elif menu_state == "texts":
-                        pdf_path = topics[selected_topic][selected_index][1]
-                        open_pdf(pdf_path)
-                elif event.key == pygame.K_BACKSPACE:
-                    if menu_state == "texts":
-                        menu_state = "topics"
-                        selected_index = 0
-
+                        if selected_index == len(options) - 1:  # "Back" option
+                            menu_state = "topics"
+                            selected_topic = None
+                            selected_index = 0
+                        else:
+                            # Open the selected PDF
+                            pdf_path = topics[selected_topic][selected_index][1]
+                            open_pdf(pdf_path)
 
 # --------------------- Main Game Loop ---------------------
 
